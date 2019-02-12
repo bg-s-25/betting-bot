@@ -3,7 +3,7 @@ import math
 import random
 import os.path
 
-COMMANDS_LIST = ['hello', 'help', 'join', 'op <clear, start, stop, scores>', 'coins / c', 'bet <option> <n>', 'bail', 'flip <n>', 'roll <n>']
+COMMANDS_LIST = ['!hello', '!help', '!join', '!op <clear, start, stop, scores>', '!coins / !c', '!bet <option> <n>', '!bail', '!flip <n>', '!roll <n>']
 joined_users = {} # joined users - User objects
 op_users = [] # admins - strings
 DEFAULT_COINS = 100
@@ -101,7 +101,7 @@ async def on_message(message):
     elif msg_content.startswith('!help'): # list commands
         msg = "List of commands:"
         for command in COMMANDS_LIST:
-            msg += "\n- !" + command
+            msg += "\n- " + command
 
     elif msg_content.startswith('!join'): # join
         if str(msg_author) in joined_users:
@@ -123,7 +123,7 @@ async def on_message(message):
             result = op(str(msg_author), params)
             msg = str(result[1])
 
-    elif msg_content.startswith('!coins'): # show user's coins
+    elif msg_content.startswith('!coins') or msg_content.startswith('!c'): # show user's coins
         if not str(msg_author) in joined_users:
             msg = "{0.author.mention} You must !join to do that".format(message)
         else:
@@ -217,6 +217,7 @@ def op(user, params):
         params.pop(0)
         if len(params) < 2:
             return (1, "Error: Incorrectly specified options")
+        # bet_setting = BetSetting()
         bet_setting.set_options(params)
         bet_setting.accept_bets = True
         msg_string = "Notice: Betting has started!"
@@ -251,7 +252,7 @@ def op(user, params):
     elif params[0] == 'scores': # display scoreboard
         return (0, scoreboard())
 
-    elif params[0] == 'save': # save all user scores to text file
+    elif params[0] == 'save': # save all user' scores to text file
         f = open('scores.txt', 'w+')
         for user_key in joined_users:
             f.write(user_key + ' ' + str(joined_users[user_key].coins))
@@ -365,7 +366,11 @@ def fileLst(file):
         input[i] = input[i].split(' ')
     return input
 
-# Run bot
+# Get things ready
 COMMANDS_LIST.sort()
+f = open('current_token.txt', 'r')
+lines = f.readlines()
 bet_setting = BetSetting()
-client.run('token')
+
+# Run bot
+client.run(lines[0])
