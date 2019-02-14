@@ -7,7 +7,7 @@ COMMANDS_LIST = ['!hello', '!help', '!join', '!op <clear, start, stop, scores>',
 joined_users = {} # joined users - User objects
 op_users = [] # admins - strings
 DEFAULT_COINS = 100
-OP_ROLES = ['everyone'] # roles required to use !op
+OP_ROLES = ['bot-admin'] # roles required to use !op
 
 client = discord.Client()
 
@@ -123,7 +123,7 @@ async def on_message(message):
             result = op(str(msg_author), params)
             msg = str(result[1])
 
-    elif msg_content.startswith('!coins') or msg_content.startswith('!c'): # show user's coins
+    elif msg_content.startswith('!coins') or msg_content == '!c': # show user's coins
         if not str(msg_author) in joined_users:
             msg = "{0.author.mention} You must !join to do that".format(message)
         else:
@@ -235,13 +235,13 @@ def op(user, params):
         return (0, return_msg)
 
     elif params[0] == 'win': # stop accepting bets, set winner, allocate coins
-        if len(params) != 1 or safe_cast(params[0], int) is None:
+        if len(params) != 2 or safe_cast(params[1], int) is None:
             return (1, "Error: Incorrectly specified winner")
-        if int(params[0]) < 0 or int(params[0]) > len(bet_setting.options) - 1:
+        if int(params[1]) < 0 or int(params[1]) > len(bet_setting.options) - 1:
             return (1, "Error: Incorrectly specified winner")
         bet_setting.accept_bets = False
-        win(int(params[0]))
-        return_msg = "Notice: Betting has ended! The winner is " + bet_setting.options_labels[int(params[0])]
+        win(int(params[1]))
+        return_msg = "Notice: Betting has ended! The winner is " + bet_setting.options_labels[int(params[1])]
         reset()
         return (0, return_msg)
 
@@ -321,8 +321,11 @@ def scoreboard():
 
 def checkrole(msg_author, seeking_role):
     for role in msg_author.roles:
-        role_str = str(role)[1:]
-        if str(seeking_role).lower() == role_str.lower(): # omit '@' in role string
+        if str(role).startswith('@'):
+            role_str = str(role)[1:]
+        else:
+            role_str = str(role)
+        if str(seeking_role).lower() == role_str.lower():
             return True
     return False
 
@@ -368,9 +371,9 @@ def fileLst(file):
 
 # Get things ready
 COMMANDS_LIST.sort()
-f = open('current_token.txt', 'r')
-lines = f.readlines()
 bet_setting = BetSetting()
 
 # Run bot
+f = open('current_token.txt', 'r')
+lines = f.readlines()
 client.run(lines[0])
